@@ -4,6 +4,7 @@ import org.lwjgl.Version;
 import org.lwjgl.glfw.GLFWErrorCallback;
 import org.lwjgl.opengl.GL;
 
+import static org.lwjgl.glfw.Callbacks.glfwFreeCallbacks;
 import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.system.MemoryUtil.NULL;
@@ -14,12 +15,18 @@ public class Window {
     private String title;
     private long glfwWindow;
 
+    private float r, g, b, a;
+
     private static Window window = null;
 
     private Window() {
         this.width = 1280;
         this.height = 720;
         this.title = "Mario";
+        r = 0;
+        g = 0;
+        b = 0;
+        a = 0;
     }
 
     public static Window get() {
@@ -36,6 +43,15 @@ public class Window {
 
         init();
         loop();
+
+        // Free the memory
+        glfwFreeCallbacks(glfwWindow);
+        glfwDestroyWindow(glfwWindow);
+
+        // Terminate GLFW free the error callback
+        glfwTerminate();
+        glfwSetErrorCallback(null).free();
+
     }
 
     public void init() {
@@ -57,6 +73,12 @@ public class Window {
         if (glfwWindow == 0) {
             throw new IllegalStateException("Failed to create GLFW window!");
         }
+
+        // Setting up all the inputs callbacks
+        glfwSetCursorPosCallback(glfwWindow, MouseListener::mousePosCallback);
+        glfwSetMouseButtonCallback(glfwWindow, MouseListener::mouseButtonCallback);
+        glfwSetScrollCallback(glfwWindow, MouseListener::mouseScrollCallback);
+        glfwSetKeyCallback(glfwWindow, KeyListener::keyCallback);
 
         // Make the OpenGL context current
         glfwMakeContextCurrent(glfwWindow);
@@ -83,8 +105,15 @@ public class Window {
             glfwPollEvents();
 
             // Set the clear color
-            glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+            glClearColor(r, g, b, a);
             glClear(GL_COLOR_BUFFER_BIT);
+
+            if (KeyListener.isKeyPressed(GLFW_KEY_SPACE)) {
+                r = (float) (Math.random() * 1);
+                g = (float) (Math.random() * 1);
+                b = (float) (Math.random() * 1);
+                a = (float) (Math.random() * 1);
+            }
 
             glfwSwapBuffers(glfwWindow);
         }
