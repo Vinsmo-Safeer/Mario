@@ -27,9 +27,9 @@ public class Window {
         this.width = 1280;
         this.height = 720;
         this.title = "Mario";
-        r = 1;
-        g = 1;
-        b = 1;
+        r = 0;
+        g = 0;
+        b = 0;
         a = 1;
     }
 
@@ -37,11 +37,11 @@ public class Window {
         switch (newScene) {
             case 0:
                 currentScene = new LevelEditorScene();
-                System.out.println("Changed scene to: " + newScene);
+                currentScene.init();
                 break;
             case 1:
                 currentScene = new LevelScene();
-                System.out.println("Changed scene to: " + newScene);
+                currentScene.init();
                 break;
             default:
                 assert false : "Unknown Scene '" + newScene + "'";
