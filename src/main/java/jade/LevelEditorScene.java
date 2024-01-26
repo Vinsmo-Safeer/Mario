@@ -1,6 +1,7 @@
 package jade;
 
 import org.lwjgl.BufferUtils;
+import renderer.Shader;
 
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
@@ -11,30 +12,7 @@ import static org.lwjgl.opengl.GL30.glGenVertexArrays;
 
 public class LevelEditorScene extends Scene {
 
-    private String vertexShaderSrc = "#version 330 core\n" +
-            "layout (location = 0) in vec3 aPos;\n" +
-            "layout (location = 1) in vec4 aColor;\n" +
-            "\n" +
-            "out vec4 fColor;\n" +
-            "\n" +
-            "void main()\n" +
-            "{\n" +
-            "    fColor = aColor;\n" +
-            "    gl_Position = vec4(aPos, 1.0);\n" +
-            "}";
-
-    private String fragmentShaderSrc= "#version 330 core\n" +
-            "\n" +
-            "in vec4 fColor;\n" +
-            "\n" +
-            "out vec4 color;\n" +
-            "\n" +
-            "void main()\n" +
-            "{\n" +
-            "    color = fColor;\n" +
-            "}";
-
-    private int vertexId, fragmentId, shaderProgram;
+    Shader defaultShader;
 
     private float[] vertexArray = {
             // Position                      // Color
@@ -62,56 +40,8 @@ public class LevelEditorScene extends Scene {
     @Override
     public void init() {
 
-        // =========================|
-        // COMPILE AND LINK SHADERS |
-        // =========================|
-
-        // first load and compile the vertex shader
-        vertexId = glCreateShader(GL_VERTEX_SHADER);
-        // pass the shader source to the GPU
-        glShaderSource(vertexId, vertexShaderSrc);
-        glCompileShader(vertexId);
-
-        // check for errors in compilation
-        int success = glGetShaderi(vertexId, GL_COMPILE_STATUS);
-        if (success == GL_FALSE) {
-            int len = glGetShaderi(vertexId, GL_INFO_LOG_LENGTH);
-            System.out.println("ERROR: 'defaultShader.glsl'\n\tVertex Shader compilation failed");
-            System.out.println(glGetShaderInfoLog(vertexId, len));
-            assert false: "";
-        }
-
-        // first load and compile the fragment shader
-        fragmentId = glCreateShader(GL_FRAGMENT_SHADER);
-        // pass the shader source to the GPU
-        glShaderSource(fragmentId, fragmentShaderSrc);
-        glCompileShader(fragmentId);
-
-        // check for errors in compilation
-        success = glGetShaderi(fragmentId, GL_COMPILE_STATUS);
-        if (success == GL_FALSE) {
-            int len = glGetShaderi(fragmentId, GL_INFO_LOG_LENGTH);
-            System.out.println("ERROR: 'defaultShader.glsl'\n\tFragment Shader compilation failed");
-            System.out.println(glGetShaderInfoLog(fragmentId, len));
-            assert false: "";
-        }
-
-        // Link shaders and check for errors
-        shaderProgram = glCreateProgram();
-        glAttachShader(shaderProgram, vertexId);
-        glAttachShader(shaderProgram, fragmentId);
-        glLinkProgram(shaderProgram);
-
-        // check for linking errors
-        success = glGetProgrami(shaderProgram, GL_LINK_STATUS);
-        if (success == GL_FALSE) {
-            int len = glGetProgrami(shaderProgram, GL_INFO_LOG_LENGTH);
-            System.out.println("ERROR: 'defaultShader.glsl'\n\tLinking of shaders failed");
-            System.out.println(glGetProgramInfoLog(shaderProgram, len));
-            assert false: "";
-        }
-
-
+        defaultShader = new Shader("assets/shaders/default.glsl");
+        defaultShader.compile();
 
         // ==========================================================|
         // Generate VBO, VAO and EBO buffer objects, and send to GPU |
@@ -153,8 +83,7 @@ public class LevelEditorScene extends Scene {
     @Override
     public void update(float dt) {
 
-        // Bind shader program
-        glUseProgram(shaderProgram);
+        defaultShader.use();
         // Bind VAO that we are using
         glBindVertexArray(vboId);
 
@@ -170,6 +99,6 @@ public class LevelEditorScene extends Scene {
 
         glBindVertexArray(0);
 
-        glUseProgram(0);
+        defaultShader.detach();
     }
 }
